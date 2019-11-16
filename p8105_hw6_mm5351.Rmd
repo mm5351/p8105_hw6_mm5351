@@ -6,5 +6,70 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(viridis)
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 6,
+  out.width = "90%"
+  )
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colur_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+```
+
+
+```{r load/tidy data}
+birthweight_data = 
+  read_csv("./Data/birthweight.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    babysex = recode(babysex, 
+              "1" = "male", 
+              "2" = "female"),
+  babysex = as.factor(babysex),
+  frace = recode(frace,
+                 "1" = "White",
+                 "2" = "Black",
+                 "3" = "Asian",
+                 "4" = "Puerto Rican",
+                 "8" = "Other",
+                 "9" = "Unknown"),
+  frace = as.factor(frace),
+  malform = recode(malform,
+                   "0" = "absent",
+                   "1" = "present"),
+  malform = as.factor(malform),
+  mrace = recode(mrace,
+                 "1" = "White",
+                 "2" = "Black",
+                 "3" = "Asian",
+                 "4" = "Puerto Rican",
+                 "8" = "Other"),
+  mrace = as.factor(mrace)) %>% 
+  na.omit()
+```
+
+```{r models}
+birthweight_data %>% 
+  lm(bwt ~ fincome + parity, data = .) %>% 
+  broom::tidy()
+
+birthweight_data %>% 
+  lm(bwt ~ blength + gaweeks, data = .) %>% 
+  broom::tidy()
+
+birthweight_data %>% 
+  lm(bwt ~ bhead + blength + babysex + bhead * blength + bhead * babysex + blength * babysex + bhead * blength * babysex, data = .) %>% 
+  broom::tidy()
 ```
