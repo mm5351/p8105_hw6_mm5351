@@ -1,0 +1,10 @@
+---
+title: "p8105_hw6_mm5351"
+author: "Martha Mulugeta"
+date: "11/15/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
