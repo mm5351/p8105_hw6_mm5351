@@ -124,7 +124,64 @@ cv_df %>%
   ggplot(aes(x = model, y = rmse)) + geom_violin()
 ```
 
+***Problem 2***
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+```
 
+```{r}
+bootstrap_rsquared = 
+  weather_df %>%
+  modelr::bootstrap(n = 5000) %>%
+  mutate(
+    models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::glance)) %>% 
+  select(results) %>% 
+  unnest(results) %>% 
+  mutate(
+    lower = quantile(r.squared, 0.025),
+    upper = quantile(r.squared, 0.975)
+  ) %>% 
+  select(lower, upper) %>% 
+  distinct()
+```
 
+The 95% confidence interval for r-squared is between `r pull(bootstrap_rsquared, lower)` and `r pull(bootstrap_rsquared, upper)`.
+
+```{r}
+bootstrap_log = 
+  weather_df %>%
+  modelr::bootstrap(n = 5000) %>%
+  mutate(
+    models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::tidy)) %>% 
+  select(results) %>% 
+  unnest(results) %>%
+  select(term, estimate) %>% 
+  pivot_wider(
+    names_from = term,
+    values_from = estimate
+  ) %>% 
+  unnest() %>% 
+  rename("intercept" = "(Intercept)") %>% 
+  mutate(logb0b1 = log(intercept * tmin),
+    lower = quantile(logb0b1, 0.025),
+    upper = quantile(logb0b1, 0.975)
+  ) %>% 
+  select(lower, upper) %>% 
+  distinct()
+```
+
+The 95% confidence interval for log(b0 * b1) is between `r pull(bootstrap_log, lower)` and `r pull(bootstrap_log, upper)`.
 
 
